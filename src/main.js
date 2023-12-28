@@ -3,11 +3,13 @@ import 'izitoast/dist/css/iziToast.min.css';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import axios from 'axios';
+import icon from './img/bi_x-octagon.svg';
 
 const input = document.querySelector('.search-input');
-const btn = document.querySelector('.search-btn');
+const form = document.querySelector('.search-form');
 const gallery = document.querySelector('.gallery');
 let page = 1;
+let previousSearchValue = '';
 const request = {
   key: '41300766-2a2685b0426849001fa971f21',
   q: '',
@@ -15,7 +17,6 @@ const request = {
   orientation: 'horizontal',
   safesearch: true,
   per_page: 40,
-  page: page,
 };
 const options = {
   overlayOpacity: 0.8,
@@ -36,7 +37,7 @@ const getImagesFromAPI = async (url, scrollHight) => {
           backgroundColor: '#EF4040',
           messageColor: '#FAFAFB',
           position: 'topRight',
-          iconUrl: '/img/bi_x-octagon.svg',
+          iconUrl: icon,
           iconColor: '#ffffff',
           maxWidth: 432,
           messageSize: 16,
@@ -78,12 +79,20 @@ const getImagesFromAPI = async (url, scrollHight) => {
       });
     })
     .catch(error => {
+      if (document.querySelector('.loader')) {
+        document.querySelector('.loader').remove();
+      }
       console.log(error);
     });
 };
 
-btn.addEventListener('click', event => {
+form.addEventListener('submit', event => {
   event.preventDefault();
+
+  if (previousSearchValue !== input.value) {
+    gallery.innerHTML = '';
+    request.q = input.value;
+  }
   if (document.querySelector('.loader')) {
     document.querySelector('.loader').remove();
   }
@@ -93,10 +102,9 @@ btn.addEventListener('click', event => {
   gallery.insertAdjacentHTML('afterend', `<span class="loader"></span>`);
   page = 1;
 
-  request.q = input.value;
-  URL += new URLSearchParams(request);
+  const currentURL = URL + new URLSearchParams(request) + `&page=${page}`;
   input.value = '';
-  getImagesFromAPI(URL, 0);
+  getImagesFromAPI(currentURL, 0);
 });
 
 const renderMarkup = data => {
@@ -137,12 +145,12 @@ const renderMarkup = data => {
     gallery.insertAdjacentHTML('afterend', `<span class="loader"></span>`);
     page += 1;
 
-    URL += new URLSearchParams(request);
+    const currentURL = URL + new URLSearchParams(request) + `&page=${page}`;
     const scrollHight =
       document.querySelector('.gallery-item').getBoundingClientRect().height *
       2;
 
-    getImagesFromAPI(URL, scrollHight);
+    getImagesFromAPI(currentURL, scrollHight);
   });
 
   lightbox.refresh();
