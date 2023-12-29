@@ -1,9 +1,9 @@
-import iziToast from 'izitoast';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 import 'izitoast/dist/css/iziToast.min.css';
 import SimpleLightbox from 'simplelightbox';
-import 'simplelightbox/dist/simple-lightbox.min.css';
-import axios from 'axios';
 import icon from './img/bi_x-octagon.svg';
+import iziToast from 'izitoast';
+import axios from 'axios';
 
 const input = document.querySelector('.search-input');
 const form = document.querySelector('.search-form');
@@ -18,19 +18,24 @@ const request = {
   safesearch: true,
   per_page: 40,
 };
-const options = {
+const lightboxOptions = {
   overlayOpacity: 0.8,
   captionsData: 'alt',
   captionDelay: 250,
 };
 let URL = `https://pixabay.com/api/?`;
-const lightbox = new SimpleLightbox('.gallery a', options);
+const lightbox = new SimpleLightbox('.gallery a', lightboxOptions);
+
+const removeElemenyBySelector = selestor => {
+  if (document.querySelector(selestor))
+    document.querySelector(selestor).remove();
+};
 
 const getImagesFromAPI = async (url, scrollHight) => {
   await axios
     .get(url)
     .then(({ data }) => {
-      if (!data.hits[0]) {
+      if (data.hits.length === 0) {
         iziToast.error({
           message:
             'Sorry, there are no images matching your search query. Please try again!',
@@ -43,16 +48,16 @@ const getImagesFromAPI = async (url, scrollHight) => {
           messageSize: 16,
         });
 
-        if (document.querySelector('.load-more-btn')) {
-          document.querySelector('.load-more-btn').remove();
-        }
+        removeElemenyBySelector('.loader');
+        removeElemenyBySelector('.load-more-btn');
+
         gallery.innerHTML = '';
         return;
       }
 
       const totalPages = Math.ceil(data.totalHits / request.per_page);
 
-      if (page === totalPages) {
+      if (data.totalHits <= request.per_page || page === totalPages) {
         iziToast.info({
           message: "We're sorry, but you've reached the end of search results.",
           position: 'topRight',
@@ -60,14 +65,11 @@ const getImagesFromAPI = async (url, scrollHight) => {
           messageSize: 16,
         });
 
-        if (document.querySelector('.load-more-btn')) {
-          document.querySelector('.load-more-btn').remove();
+        if (data.totalHits <= request.per_page) {
+          renderMarkup(data);
         }
-
-        if (document.querySelector('.loader')) {
-          document.querySelector('.loader').remove();
-        }
-
+        removeElemenyBySelector('.loader');
+        removeElemenyBySelector('.load-more-btn');
         return;
       }
 
@@ -79,9 +81,7 @@ const getImagesFromAPI = async (url, scrollHight) => {
       });
     })
     .catch(error => {
-      if (document.querySelector('.loader')) {
-        document.querySelector('.loader').remove();
-      }
+      removeElemenyBySelector('.loader');
       console.log(error);
     });
 };
@@ -93,12 +93,9 @@ form.addEventListener('submit', event => {
     gallery.innerHTML = '';
     request.q = input.value;
   }
-  if (document.querySelector('.loader')) {
-    document.querySelector('.loader').remove();
-  }
-  if (document.querySelector('.load-more-btn')) {
-    document.querySelector('.load-more-btn').remove();
-  }
+  removeElemenyBySelector('.loader');
+  removeElemenyBySelector('.load-more-btn');
+
   gallery.insertAdjacentHTML('afterend', `<span class="loader"></span>`);
   page = 1;
 
