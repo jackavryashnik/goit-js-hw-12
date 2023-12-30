@@ -93,10 +93,10 @@ form.addEventListener('submit', event => {
     gallery.innerHTML = '';
     request.q = input.value;
   }
+  gallery.insertAdjacentHTML('afterend', `<span class="loader"></span>`);
   removeElemenyBySelector('.loader');
   removeElemenyBySelector('.load-more-btn');
 
-  gallery.insertAdjacentHTML('afterend', `<span class="loader"></span>`);
   page = 1;
 
   const currentURL = URL + new URLSearchParams(request) + `&page=${page}`;
@@ -105,18 +105,9 @@ form.addEventListener('submit', event => {
 });
 
 const renderMarkup = data => {
-  let markup = data.hits
-    .map(
-      ({
-        webformatURL,
-        largeImageURL,
-        tags,
-        likes,
-        views,
-        comments,
-        downloads,
-      }) => {
-        return `<li class="gallery-item">
+  
+  let markup = data.hits.reduce((html, {webformatURL,largeImageURL,tags,likes,views,comments,downloads}) => {
+    return html + `<li class="gallery-item">
         <a class="gallery-link" href=${largeImageURL}>
           <img class="gallery-image" src=${webformatURL} data-source=${largeImageURL} alt="${tags}" width="360" height="200"/>
           <ul class="image-stats">
@@ -126,19 +117,15 @@ const renderMarkup = data => {
             <li class="stats-item"><h3 class="stat-title">Downloads</h3><p class="stat-value">${downloads}</p></li>
           </ul>  
           </a>
-        </li>`;
-      }
-    )
-    .join('');
+        </li>`
+  }, "");
 
-  let loadMoreBtn = `<button type="submit" class="load-more-btn">Load more</button>`;
-
-  document.querySelector('.loader').remove();
+  removeElemenyBySelector('.loader');
   gallery.insertAdjacentHTML('beforeend', markup);
-  gallery.insertAdjacentHTML('afterend', loadMoreBtn);
+  gallery.insertAdjacentHTML('afterend', `<button type="submit" class="load-more-btn">Load more</button>`);
   document.querySelector('.load-more-btn').addEventListener('click', event => {
     event.preventDefault();
-    document.querySelector('.load-more-btn').remove();
+    removeElemenyBySelector('.load-more-btn');
     gallery.insertAdjacentHTML('afterend', `<span class="loader"></span>`);
     page += 1;
 
